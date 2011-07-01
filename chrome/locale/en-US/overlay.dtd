@@ -1,0 +1,6 @@
+<!ENTITY autoscheduler.label "AutoScheduler">
+<!ENTITY autoschedulerContext.label "AutoScheduler">
+<!ENTITY autoschedulerContext.accesskey "Y">
+<!ENTITY autoschedulerToolbarButton.label "AutoScheduler">
+<!ENTITY autoschedulerToolbarButton.tooltip "Manage Tasks">
+<!ENTITY autoschedulerSidebar.label "AutoScheduler">
