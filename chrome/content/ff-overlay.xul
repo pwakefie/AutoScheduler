@@ -2,8 +2,8 @@
 <?xml-stylesheet href="chrome://autoscheduler/skin/overlay.css" type="text/css"?>
 <!DOCTYPE overlay SYSTEM "chrome://autoscheduler/locale/overlay.dtd">
 <overlay id="autoscheduler-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="overlay.js"/>
-  <script src="ff-overlay.js"/>
+  <script type="application/javascript;version=1.8" src="overlay.js"/>
+  <script type="application/javascript;version=1.8" src="ff-overlay.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="autoscheduler-strings" src="chrome://autoscheduler/locale/overlay.properties"/>
@@ -21,8 +21,12 @@
   </toolbarpalette>
 
 
+  <keyset>
+    <key id="viewSidebar_autoscheduler-key" modifiers="accel shift" key="S" observes="viewSidebar_autoscheduler"/>
+  </keyset>
+
   <menupopup id="viewSidebarMenu">
-    <menuitem observes="viewSidebar_autoscheduler" />
+    <menuitem observes="viewSidebar_autoscheduler" key="viewSidebar_autoscheduler-key"/>
   </menupopup>
 
   <broadcasterset id="mainBroadcasterSet">

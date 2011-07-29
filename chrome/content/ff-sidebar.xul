@@ -4,9 +4,30 @@
 
 <page id="autoschedulerSidebar" title="&autoschedulerSidebar.label;"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="ff-sidebar.js"/>
-
-  <vbox flex="1">
-    <label value="&autoschedulerSidebar.label;" />
-  </vbox>
+  <script type="application/javascript;version=1.8" src="ff-sidebar.js"/>
+  
+  <tree id="treeview" editable="true">
+    <treecols>
+      <treecol id="done" label="Done" type="checkbox" editable="true"/>
+      <treecol id="description"  label="Description"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="Have fun"/>
+        </treerow>
+        <treerow>
+          <treecell/>
+          <treecell label="Say hi!"/>
+        </treerow>
+      </treeitem>
+      <treeitem>
+        <treerow>
+          <treecell/>
+          <treecell label="Say bye!"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+  
 </page>

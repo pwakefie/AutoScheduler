@@ -1,21 +1,29 @@
 var autoscheduler = {
-  onLoad: function() {
-    // initialization code
-    this.initialized = true;
-    this.strings = document.getElementById("autoscheduler-strings");
-  },
+    onLoad: function() {
+        // initialization code
+        this.initialized = true; this.strings =
+        document.getElementById("autoscheduler-strings");
+    },
+    
+    win: null,
 
-  onMenuItemCommand: function(e) {
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                  .getService(Components.interfaces.nsIPromptService);
-    promptService.alert(window, this.strings.getString("helloMessageTitle"),
-                                this.strings.getString("helloMessage"));
-  },
+    onMenuItemCommand: function(e) {
 
-  onToolbarButtonCommand: function(e) {
-    // just reuse the function above.  you can change this, obviously!
-    autoscheduler.onMenuItemCommand(e);
-  }
+        // This should be for options eventually
+        // For now, using main window
+        autoscheduler.onToolbarButtonCommand(e);
+    },
+
+    onToolbarButtonCommand: function(e) {
+
+        if(!autoscheduler.win || autoscheduler.win.closed) {
+            autoscheduler.win = window.open("chrome://autoscheduler/content/taskedit.xul",
+                                        "autoschedulerTaskEdit", "chrome,centerscreen");
+        } else {
+            autoscheduler.win.close();
+            autoscheduler.win = null;
+        }
+    }
 };
 
 window.addEventListener("load", function () { autoscheduler.onLoad(); }, false);
