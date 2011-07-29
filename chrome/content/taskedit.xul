@@ -8,7 +8,10 @@
 
     <script type="application/javascript;version=1.8" src="taskedit.js"/>
 
+
+
     <hbox>
+        <!-- Use a textbox of type="search" for possible future command entry box -->
         <vbox flex="1" style="width:15em">
 	    <tabbox flex="1">
 		<tabs>
@@ -17,67 +20,72 @@
 		</tabs>
 		<tabpanels>
 		    <tabpanel><!--Activities-->
-			    <listbox id="actlist" onkeyup="autoscheduler.clearFields();document.getElementById('id').value = this.selectedItem.value;autoscheduler.load()" onclick="autoscheduler.clearFields();document.getElementById('id').value = this.selectedItem.value;autoscheduler.load()">
-			    </listbox>
+                        <hbox>
+			    <listbox id="actlist" onselect="autoscheduler.clearFields();document.getElementById('id').value = this.selectedItem.value;autoscheduler.load()"/>
+                        </hbox>
+                        <hbox>
+                            <groupbox>
+                                <vbox>
+                                    <spacer flex="1"/>
+                                    
+                                    <hbox align="center">
+                                        <label style="width:8em;visibility:collapse" value="ID:"/>
+                                        <textbox id="id" type="number" hidespinbuttons="true" style="width:5em;visibility:collapse" focused="true"/>
+                                    </hbox>
+                                    <hbox align="center">
+                                        <label style="width:8em" value="Description:"/>
+                                        <textbox id="description" style="width:21em"/>
+                                    </hbox>
+                                    <hbox align="center">
+                                        <label style="width:8em" value="Notes:"/>
+                                        <textbox id="notes" multiline="true" rows="4" style="width:21em"/>
+                                    </hbox>
+                                    <hbox align="center">
+                                        <label style="width:8em" value="Start Time:"/>
+                                        <datepicker id="startdate" type="popup"/>
+                                        <timepicker id="starttime"/>
+                                    </hbox>
+                                    <hbox align="center">
+                                        <label style="width:8em" value="Estimated Time:"/>
+                                        <textbox id="estimate" type="number" hidespinbuttons="true" style="width:11em"/>
+                                        <menulist id="units">
+                                            <menupopup style="width:8em">
+                                                <menuitem label="Seconds" id="units-Seconds"/>
+                                                <menuitem label="Minutes" id="units-Minutes"/>
+                                                <menuitem label="Hours" id="units-Hours"/>
+                                                <menuitem label="Days" id="units-Days"/>
+                                            </menupopup>
+                                        </menulist>
+                                    </hbox>
+                                    <hbox align="center">
+                                        <label style="width:8em" value="End Time:"/>
+                                        <datepicker id="enddate" type="popup"/>
+                                        <timepicker id="endtime"/>
+                                    </hbox>
+                                    <hbox align="center">
+                                        <button id="saveButton" label="Save" oncommand="autoscheduler.save()"/>
+                                        <spacer flex="1"/>
+                                        <button id="deleteButton" label="Delete" oncommand="autoscheduler.deletes()"/>
+                                        <spacer flex="1"/>
+                                        <button id="cancelButton" label="Cancel" oncommand="window.close()"/>
+                                    </hbox>
+                                </vbox>
+                            </groupbox>
+                        </hbox>
 		    </tabpanel>
 		    <tabpanel><!--Schedule-->
 			<vbox>
 			    <listbox id="schlist" onkeyup="autoscheduler.clearFields();document.getElementById('id').value = this.selectedItem.value;autoscheduler.load()" onclick="autoscheduler.clearFields();document.getElementById('id').value = this.selectedItem.value;autoscheduler.load()">
 			    </listbox>
 			</vbox>
+                        <vbox>
+                            <button id="deleteButton" label="Schedule" oncommand="autoscheduler.pre_schedule()"/>
+                            <spacer flex="1"/>
+                        </vbox>
 		    </tabpanel>
 		</tabpanels>
 	    </tabbox>
         </vbox>
-        <separator orient="vertical" class="groove"/>
-        <vbox>
-            <spacer flex="1"/>
-            
-            <!-- Use a textbox of type="search" for the command entry box! :) -->
-            <hbox align="center">
-                <label style="width:8em;visibility:collapse" value="ID:"/>
-                <textbox id="id" type="number" hidespinbuttons="true" style="width:5em;visibility:collapse" focused="true"/>
-            </hbox>
-            <hbox align="center">
-                <label style="width:8em" value="Description:"/>
-                <textbox id="description" style="width:21em"/>
-            </hbox>
-            <hbox align="center">
-                <label style="width:8em" value="Notes:"/>
-                <textbox id="notes" multiline="true" rows="4" style="width:21em"/>
-            </hbox>
-            <hbox align="center">
-                <label style="width:8em" value="Start Time:"/>
-                <datepicker id="startdate" type="popup"/>
-                <timepicker id="starttime"/>
-            </hbox>
-            <hbox align="center">
-                <label style="width:8em" value="Estimated Time:"/>
-                <textbox id="estimate" type="number" hidespinbuttons="true" style="width:11em"/>
-                <menulist id="units">
-                    <menupopup style="width:8em">
-                        <menuitem label="Seconds" id="units-Seconds"/>
-                        <menuitem label="Minutes" id="units-Minutes"/>
-                        <menuitem label="Hours" id="units-Hours"/>
-                        <menuitem label="Days" id="units-Days"/>
-                    </menupopup>
-                </menulist>
-                
-            </hbox>
-            <hbox align="center">
-                <label style="width:8em" value="End Time:"/>
-                <datepicker id="enddate" type="popup"/>
-                <timepicker id="endtime"/>
-            </hbox>
-            <hbox align="center">
-                <button id="saveButton" label="Save" oncommand="autoscheduler.save()"/>
-                <spacer flex="1"/>
-                <button id="deleteButton" label="Delete" oncommand="autoscheduler.deletes()"/>
-		<spacer flex="1"/>
-		<button id="deleteButton" label="Schedule" oncommand="autoscheduler.pre_schedule()"/>
-                <spacer flex="1"/>
-                <button id="cancelButton" label="Cancel" oncommand="window.close()"/>
-            </hbox>
-        </vbox>
+
     </hbox>
 </window>

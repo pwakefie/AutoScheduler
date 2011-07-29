@@ -260,9 +260,7 @@ var autoscheduler = {
         this.start = start;
         this.end = end;
         this.estimate = estimate;
-        this.units = units;
-	let id = document.getElementById("id").value;
-	
+        this.units = units;	
     },
 
     load: function() {
@@ -470,6 +468,8 @@ var autoscheduler = {
 	var createnew = createListItem("--NEW ACTIVITY--");
 	createnew.setAttribute("value","0");
 	element.appendChild(createnew);
+        
+        element.selectedIndex = 0;
 	
         
         // Query, do callback on results
