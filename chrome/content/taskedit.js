@@ -251,7 +251,8 @@ var autoscheduler = {
 										row.getResultByName("start")*1,
 										row.getResultByName("end")*1,
 										row.getResultByName("duration"),
-										row.getResultByName("name"));
+										row.getResultByName("name"),
+										row.getResultByName("bonus"));
 					    actarray.push(obj);
 					}
                                     },
@@ -271,6 +272,9 @@ var autoscheduler = {
     
     schedule_algorithm: function(actarray){
 	actarray.sort(autoscheduler.sortTasksByBonus);
+	//for(let q = 0; q < actarray.length;q++){
+	//    alert(actarray[q].name+"\t"+actarray[q].bonus);
+	//}
 	//new Date().getTime()
 	var blank = new autoscheduler.scheduled_space(0,Math.floor(new Date().getTime()/1000)-86400,Math.floor(new Date().getTime()/1000)+604800);
 	var space_array = new Array(blank);
@@ -321,7 +325,7 @@ var autoscheduler = {
 			current.scheduled = true;
 			break;
 		    }
-		}//CURRENT PROBLEM LIES HERE 
+		}
 		else if(space_array[i].id == 0 && space_array[i].start >= current.start && space_array[i].end <= current.end && space_array[i].space >= current.estimate){
 			var c = new autoscheduler.scheduled_space(current.id,space_array[i].start,space_array[i].start+current.estimate,current.name);
 			var b = new autoscheduler.scheduled_space(0,space_array[i].start+current.estimate,space_array[i].end,"FREE");
@@ -356,6 +360,7 @@ var autoscheduler = {
 	    }
 	    if(!current.scheduled){
 		alert("Could not complete scheduling");
+		alert(current.name+"\t"+new Date(current.end*1000)+"\n"+space_array[space_array.length-1].name);
 		//document.getElementById("schedule_notes").value = space_array[0].start +"\t"+space_array[0].end+"\n"+current.start+"\t"+current.end;
 		break;
 	    }
