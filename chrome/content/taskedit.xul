@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 
-<window title="AutoScheduler: Edit Task"
+<window title="AutoScheduler"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -74,14 +74,24 @@
                         </hbox>
 		    </tabpanel>
 		    <tabpanel><!--Schedule-->
-			<vbox>
-			    <listbox id="schlist" onkeyup="autoscheduler.clearFields();document.getElementById('id').value = this.selectedItem.value;autoscheduler.load()" onclick="autoscheduler.clearFields();document.getElementById('id').value = this.selectedItem.value;autoscheduler.load()">
-			    </listbox>
-			</vbox>
-                        <vbox>
-                            <button id="deleteButton" label="Schedule" oncommand="autoscheduler.pre_schedule()"/>
-                            <spacer flex="1"/>
-                        </vbox>
+			<tree id="tree1" flex="1" hidecolumnpicker="true">
+			    <treecols>
+				<treecol id="sex1"   flex="1" label="Name" primary="true" />
+				<treecol id="color1" flex="1" label="Start" />
+				<treecol id="attr1"  flex="1" label="End" />
+			    </treecols>
+			    <treechildren id="schlist">
+				<!--<treeitem>
+				    <treerow>
+					<treecell>
+					</treecell>
+					<treecell>
+					</treecell>
+				    </treerow>
+				</treeitem>-->
+			    </treechildren>
+			</tree>
+			<button id="schedulebutton" label="Schedule" oncommand="autoscheduler.pre_schedule()"/>
 		    </tabpanel>
 		</tabpanels>
 	    </tabbox>

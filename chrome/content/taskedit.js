@@ -1,7 +1,3 @@
-/*To do
- Function to break up tasks into smaller chunks.
-*/
-
 var autoscheduler = {
     onLoad: function() {
         
@@ -23,16 +19,23 @@ var autoscheduler = {
                     estimate    INTEGER, \
                     units       TEXT",
             trees: "child       INTEGER PRIMARY KEY, \
-                    parent      INTEGER"
+                    parent      INTEGER",
+	    chunks: "chunk_id	INTEGER PRIMARY KEY, \
+		    task_id	INTEGER, \
+		    start	INTEGER, \
+		    end		INTEGER, \
+		    duration	INTEGER, \
+		    name	TEXT, \
+		    bonus	INTEGER"
        }
     },
     
-    task_object: function(taskID, start, end, estimate,name){
+    task_object: function(taskID, start, end, estimate,name,bonus){
 	this.id = taskID;
 	this.start = start;
 	this.end = end;
 	this.estimate = estimate;
-	this.bonus = end-start-estimate;
+	this.bonus = bonus;
 	this.scheduled = false;
 	this.name = name;
     },
@@ -64,6 +67,120 @@ var autoscheduler = {
             dbConn = dbService.openDatabase(dbFile);
         } this.dbConn = dbConn;
     },
+    
+    load_chunks: function(){
+	var actarray = new Array();
+	let statement = autoscheduler.dbConn.createStatement("SELECT strftime('%s', start) AS startseconds, strftime('%s', end) AS endseconds, \
+                                                             * FROM tasks");
+	/*
+        let params = statement.newBindingParamsArray();
+
+	for(let i = 1; i < 11;i++){
+	    let bp = params.newBindingParams();
+	    bp.bindByName("id", i);//<---
+	    params.addParams(bp);
+	}
+	
+        statement.bindParameters(params);
+        // Query, do callback on results
+	*/
+	
+        statement.executeAsync({
+                                    handleResult: function(aResultSet) {
+					for (let row = aResultSet.getNextRow();row;row = aResultSet.getNextRow()){
+					    let obj = new autoscheduler.task_object(row.getResultByName("id"),
+										row.getResultByName("startseconds")*1,
+										row.getResultByName("endseconds")*1,
+										row.getResultByName("estimate")*3600,
+										row.getResultByName("description"));
+					    actarray.push(obj);
+					}
+					
+                                    },
+                                    
+                                    handleError: function(aError) {
+                                        alert("Error loading: " + aError.message);
+                                    },
+            
+                                    handleCompletion: function(aReason) {
+                                        if (aReason != Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED)
+                                            alert("Load query failed!");
+					autoscheduler.create_schedule(actarray);
+                                    }
+                                });
+    },
+    create_schedule: function(actarray){
+	
+	//15m = 900s
+	var temp_array = new Array();
+	while(actarray.length>0){
+	    current = actarray.pop();
+	    var size = current.estimate;
+	    while(size > 900){
+		var temp = new autoscheduler.task_object(current.id,current.start,current.end, 900,current.name,current.end-current.start-current.estimate);
+		temp_array.push(temp);
+		size= size-900;
+	    }
+	    var temp = new autoscheduler.task_object(current.id,current.start,current.end,size,current.name,current.end-current.start-current.estimate);
+	    temp_array.push(temp);
+	}
+	autoscheduler.save_schedule(temp_array);
+    },
+    save_schedule: function(chunks){
+	// Clear first?
+	let clearStatement = autoscheduler.dbConn.createStatement("DELETE FROM chunks");
+	clearStatement.executeAsync();
+	
+	//================================
+	//+ Jonas Raoni Soares Silva
+	//@ http://jsfromhell.com/array/shuffle [v1.0]
+
+	shuffle = function(o){ //v1.0
+	    for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+	    return o;
+	};
+	shuffle(chunks);
+
+	
+	//================================
+	
+	//Clear
+	for(let i =0; i < chunks.length;i++){
+	    let statement = autoscheduler.dbConn.createStatement("INSERT INTO chunks (task_id,start,end,duration,name,bonus) \
+							 VALUES (:task_id, :start, :end, :duration, :name, :bonus)");
+        let params = statement.newBindingParamsArray();
+        let bp = params.newBindingParams();
+        
+	
+	bp.bindByName("task_id",chunks[i].id);
+	bp.bindByName("start", chunks[i].start);
+	bp.bindByName("end", chunks[i].end);
+	bp.bindByName("duration", chunks[i].estimate);
+	bp.bindByName("name",chunks[i].name);
+	bp.bindByName("bonus",chunks[i].bonus);
+        params.addParams(bp);
+        statement.bindParameters(params);
+        statement.executeAsync({
+                                    // No results -> No handleResult()
+                                    handleResult: function(aResult) {
+                                        alert("Warning: SCHEDULE SAVE Results? HOW???");
+                                    },
+                                    
+                                    handleError: function(aError) {
+                                            alert("Error saving schedule: " + aError.message);
+                                    },
+                        
+                                    handleCompletion: function(aReason) {
+                                            if (aReason != Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED)
+                                                    alert("Saving schedule did not succeed!");
+						    
+					//Update UI
+                                    }
+                                });
+	    
+	    }
+    },
+    
     deletes: function() {
         
         let id = document.getElementById("id").value;
@@ -98,6 +215,7 @@ var autoscheduler = {
                                         // Update UI after deleting
                                         autoscheduler.populateTaskList();
                                         autoscheduler.clearFields();
+					autoscheduler.load_chunks();
                                     }
                                 });
         
@@ -122,28 +240,20 @@ var autoscheduler = {
     pre_schedule: function(){
 	var actarray = new Array();
 	let statement = autoscheduler.dbConn.createStatement("SELECT strftime('%s', start) AS startseconds, strftime('%s', end) AS endseconds, \
-                                                             * FROM tasks WHERE id = :id");
-        let params = statement.newBindingParamsArray();
+                                                             * FROM chunks");
 
-	for(let i = 1; i < 11;i++){
-	    let bp = params.newBindingParams();
-	    bp.bindByName("id", i);//<---
-	    params.addParams(bp);
-	}
-	
-        statement.bindParameters(params);
+        //statement.bindParameters(params);
         // Query, do callback on results
         statement.executeAsync({
                                     handleResult: function(aResultSet) {
 					for (let row = aResultSet.getNextRow();row;row = aResultSet.getNextRow()){
-					    let obj = new autoscheduler.task_object(row.getResultByName("id"),
-										row.getResultByName("startseconds")*1,
-										row.getResultByName("endseconds")*1,
-										row.getResultByName("estimate")*3600,
-										row.getResultByName("description"));
+					    let obj = new autoscheduler.task_object(row.getResultByName("chunk_id"),
+										row.getResultByName("start")*1,
+										row.getResultByName("end")*1,
+										row.getResultByName("duration"),
+										row.getResultByName("name"));
 					    actarray.push(obj);
 					}
-					autoscheduler.schedule(actarray);
                                     },
                                     
                                     handleError: function(aError) {
@@ -153,23 +263,16 @@ var autoscheduler = {
                                     handleCompletion: function(aReason) {
                                         if (aReason != Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED)
                                             alert("Load query failed!");
-                                    }
+					autoscheduler.schedule_algorithm(actarray);
+				    }
                                 });
 	
     },
     
-    schedule: function(actarray){
-	function createListItem(aLabel) {
-	    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-	    var item = document.createElementNS(XUL_NS, "listitem"); // create a new XUL menuitem
-	    item.setAttribute("label", aLabel);
-	    return item;
-	}
-	var element = document.getElementById("schlist");
-	
+    schedule_algorithm: function(actarray){
 	actarray.sort(autoscheduler.sortTasksByBonus);
 	//new Date().getTime()
-	var blank = new autoscheduler.scheduled_space(0,1310961600,1311048000);
+	var blank = new autoscheduler.scheduled_space(0,Math.floor(new Date().getTime()/1000)-86400,Math.floor(new Date().getTime()/1000)+604800);
 	var space_array = new Array(blank);
 
 	
@@ -218,7 +321,7 @@ var autoscheduler = {
 			current.scheduled = true;
 			break;
 		    }
-		}
+		}//CURRENT PROBLEM LIES HERE 
 		else if(space_array[i].id == 0 && space_array[i].start >= current.start && space_array[i].end <= current.end && space_array[i].space >= current.estimate){
 			var c = new autoscheduler.scheduled_space(current.id,space_array[i].start,space_array[i].start+current.estimate,current.name);
 			var b = new autoscheduler.scheduled_space(0,space_array[i].start+current.estimate,space_array[i].end,"FREE");
@@ -230,13 +333,46 @@ var autoscheduler = {
 			current.scheduled = true;
 			break;
 		}
+		//Task slightly before
+		else if(space_array[i].id == 0 && space_array[i].start >= current.start && space_array[i].end >= current.end && current.end-space_array[i].start > current.estimate){
+		    var c = new autoscheduler.scheduled_space(current.id, space_array[i].start,space_array[i].start+current.estimate,current.name);
+		    var b = new autoscheduler.scheduled_space(0,space_array[i].start+current.estimate,space_array[i].end,"FREE");
+		    space_array.splice(i,1);
+		    space_array.push(b,c);
+		    current.scheduled = true;
+		    break;
+		    
+		}
+		//Task slightly after
+		else if(space_array[i].id == 0 && space_array[i].start <= current.start && space_array[i].end <= current.end && space_array[i].end-current.start > current.estimate){
+		    var c = new autoscheduler.scheduled_space(current.id,current.start,current.start+current.estimate,current.name);
+		    var a = new autoscheduler.scheduled_space(0,current.start+current.estimate,space_array[i].end,"FREE");
+		    var b = new autoscheduler.scheduled_space(0,space_array[i].start,current.start,"FREE");
+		    space_array.splice(i,1);
+		    space_array.push(a,b,c);
+		    current.scheduled = true;
+		    break;
+		}
 	    }
 	    if(!current.scheduled){
-		alert("Schedule could not be made: \nStart: " + current.start +"\nEnd: "+ current.end+ "\nEstimate: "+current.estimate+"\nBonus: "+current.bonus);
+		alert("Could not complete scheduling");
+		//document.getElementById("schedule_notes").value = space_array[0].start +"\t"+space_array[0].end+"\n"+current.start+"\t"+current.end;
 		break;
 	    }
 
 	}
+	autoscheduler.print_schedule(space_array);
+	
+    },
+    
+    print_schedule: function(space_array){
+	function createTreeItem(type) {
+	    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+	    var item = document.createElementNS(XUL_NS, type); // create a new XUL menuitem
+	    //item.setAttribute("id", anId);
+	    return item;
+	}
+	var element = document.getElementById("schlist");
 	//Sort by start times
 	space_array.sort(autoscheduler.sortTasksByStart);
 	//Print contents of schedule into the schlist box
@@ -244,11 +380,35 @@ var autoscheduler = {
 	    element.removeChild(element.firstChild);
 	}
 	for(let i = 0; i < space_array.length;i++){
-	    var createnew = createListItem(space_array[i].name);
-	    createnew.setAttribute("value",space_array[i].id);
-	    element.appendChild(createnew);
+	    var tree_item = createTreeItem("treeitem");
+	    tree_item.setAttribute("id",space_array[i].name+i+"_treeitem");
+	    element.appendChild(tree_item);
+	    var tree_row = createTreeItem("treerow");
+	    tree_row.setAttribute("id",space_array[i].name+i+"_treerow");
+	    document.getElementById(space_array[i].name+i+"_treeitem").appendChild(tree_row);
+	    var tree_name = createTreeItem("treecell");
+	    tree_name.setAttribute("label",space_array[i].name);
+	    var tree_start = createTreeItem("treecell");
+	    var now = new Date();
+	    if(now.toLocaleDateString()!=(new Date(space_array[i].start*1000)).toLocaleDateString()){//Different day
+		
+		//alert((new Date(space_array[i].start*1000)).toLocaleDateString());
+		tree_start.setAttribute("label",((new Date(space_array[i].start*1000)).getMonth()+1)+"/"+((new Date(space_array[i].start*1000)).getDate())+" "+(new Date(space_array[i].start*1000)).toLocaleTimeString());
+	    }
+	    else{
+		tree_start.setAttribute("label",(new Date(space_array[i].start*1000)).toLocaleTimeString());
+	    }
+	    var tree_end = createTreeItem("treecell");
+	    if(now.toLocaleDateString()!=(new Date(space_array[i].end*1000)).toLocaleDateString()){//Different day
+		tree_end.setAttribute("label",((new Date(space_array[i].end*1000)).getMonth()+1)+"/"+((new Date(space_array[i].end*1000)).getDate())+" "+(new Date(space_array[i].end*1000)).toLocaleTimeString());
+	    }
+	    else{
+		tree_end.setAttribute("label",(new Date(space_array[i].end*1000)).toLocaleTimeString());
+	    }
+	    document.getElementById(space_array[i].name+i+"_treerow").appendChild(tree_name);
+	    document.getElementById(space_array[i].name+i+"_treerow").appendChild(tree_start);
+	    document.getElementById(space_array[i].name+i+"_treerow").appendChild(tree_end);
 	}
-	
     },
 
     props: ["description", "notes", "start", "end", "estimate", "units"],
@@ -439,6 +599,7 @@ var autoscheduler = {
                                             if (aReason != Components.interfaces.mozIStorageStatementCallback.REASON_FINISHED)
                                                     alert("Saving did not succeed!");
                                             autoscheduler.populateTaskList();
+					    autoscheduler.load_chunks();
                                     }
                                 });
         //alert("Statement Executing");
